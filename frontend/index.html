@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8" />
@@ -32,6 +33,7 @@ body{
   background:#111827;
   border-radius:24px;
   padding:24px;
+  box-shadow:0 0 40px rgba(0,255,170,0.08);
 }
 
 .hero{
@@ -52,7 +54,11 @@ button{
 }
 
 .primary{
-  background:#00ffa3;
+  background:linear-gradient(
+    135deg,
+    #00ffa3,
+    #00c2ff
+  );
   color:black;
 }
 
@@ -69,6 +75,25 @@ button{
 
 #status{
   margin-top:10px;
+}
+
+.progress{
+  width:100%;
+  height:12px;
+  background:#1f2937;
+  border-radius:999px;
+  overflow:hidden;
+  margin-top:10px;
+}
+
+.progress-bar{
+  width:0%;
+  height:100%;
+  background:linear-gradient(
+    90deg,
+    #00ffa3,
+    #00c2ff
+  );
 }
 
 </style>
@@ -93,12 +118,21 @@ ARC Testnet NFT Collection
 <br>
 
 <p>
-Mint Price: FREE
+Mint Price: 0.001 USDC
 </p>
 
 <p id="supply">
 Supply: Loading...
 </p>
+
+<div class="progress">
+
+<div
+  id="progressBar"
+  class="progress-bar"
+></div>
+
+</div>
 
 <p id="owned">
 Your NFTs: 0
@@ -146,7 +180,7 @@ const CONTRACT_ADDRESS =
 
 const ABI = [
 
-"function mint(string memory uri) public",
+"function mint(string memory uri) public payable",
 
 "function nextTokenId() view returns(uint256)",
 
@@ -155,6 +189,8 @@ const ABI = [
 
 const METADATA_URI =
 'https://gateway.pinata.cloud/ipfs/bafkreihgpyagb57cucqtgg6zfoakb4tfgbk7q7hnxggv4zafzk26gbe73e';
+
+const MAX_SUPPLY = 100;
 
 const ARC_CHAIN_ID =
 '0x4cef52';
@@ -232,7 +268,8 @@ async function connectWallet(){
       )
       .innerText =
 
-      address;
+      `Connected:
+${address.slice(0,6)}...${address.slice(-4)}`;
 
     document
       .getElementById(
@@ -240,7 +277,7 @@ async function connectWallet(){
       )
       .innerText =
 
-      'Status: Connected';
+      '✅ Connected to ARC Testnet';
 
     await loadData();
 
@@ -280,7 +317,18 @@ async function loadData(){
       )
       .innerText =
 
-      `Supply: ${supply}/100`;
+      `Supply: ${supply}/${MAX_SUPPLY}`;
+
+    const percent =
+      (Number(supply) / MAX_SUPPLY) * 100;
+
+    document
+      .getElementById(
+        'progressBar'
+      )
+      .style.width =
+
+      `${percent}%`;
 
     if(signer){
 
@@ -326,7 +374,7 @@ async function mintNFT(){
       )
       .innerText =
 
-      'Status: Minting...';
+      'Minting...';
 
     const contract =
       new ethers.Contract(
@@ -340,7 +388,15 @@ async function mintNFT(){
 
     const tx =
       await contract.mint(
-        METADATA_URI
+
+        METADATA_URI,
+
+        {
+          value:
+            ethers.parseEther(
+              "0.001"
+            )
+        }
       );
 
     await tx.wait();
@@ -351,7 +407,7 @@ async function mintNFT(){
       )
       .innerText =
 
-      'Status: Mint Success';
+      '✅ Mint Success';
 
     await loadData();
 
@@ -374,7 +430,7 @@ async function mintNFT(){
       )
       .innerText =
 
-      'Status: Failed';
+      '❌ Mint Failed';
   }
 }
 
