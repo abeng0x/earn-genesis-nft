@@ -450,52 +450,16 @@ async function switchToArcNetwork() {
       params: [
 
         {
-          chainId: '0x4CF4B2'
+          chainId: '0xA4B1'
         }
       ]
     });
 
-  } catch (switchError) {
+  } catch(err) {
 
-    try {
-
-      await window.ethereum.request({
-
-        method: 'wallet_addEthereumChain',
-
-        params: [
-
-          {
-            chainId: '0x4CF4B2',
-
-            chainName: 'ARC Testnet',
-
-            nativeCurrency: {
-
-              name: 'USDC',
-
-              symbol: 'USDC',
-
-              decimals: 6
-            },
-
-            rpcUrls: [
-
-              'https://rpc.testnet.arc.network'
-            ],
-
-            blockExplorerUrls: [
-
-              'https://testnet.arcscan.app'
-            ]
-          }
-        ]
-      });
-
-    } catch(addError) {
-
-      console.log(addError);
-    }
+    alert(
+      'Please add ARC Testnet manually to MetaMask first'
+    );
   }
 }
 
@@ -509,7 +473,7 @@ async function checkNetwork() {
       method: 'eth_chainId'
     });
 
-  if (chainId === '0x4CF4B2') {
+  if (chainId === '0xA4B1') {
 
     document
       .getElementById(
