@@ -322,74 +322,28 @@ let signer;
 
 async function switchToArcNetwork(){
 
-  if(!window.ethereum){
+  await window.ethereum.request({
 
-    alert('Install MetaMask');
+    method:'wallet_switchEthereumChain',
 
-    return;
-  }
-
-  try{
-
-    await window.ethereum.request({
-
-      method:'wallet_switchEthereumChain',
-
-      params:[
-        {
-          chainId:ARC_CHAIN_ID
-        }
-      ]
-    });
-
-  }catch(err){
-
-    try{
-
-      await window.ethereum.request({
-
-        method:'wallet_addEthereumChain',
-
-        params:[
-
-          {
-
-            chainId:ARC_CHAIN_ID,
-
-            chainName:'Arc Testnet',
-
-            nativeCurrency:{
-
-              name:'USDC',
-
-              symbol:'USDC',
-
-              decimals:18
-            },
-
-            rpcUrls:[
-              'https://rpc.testnet.arc.network'
-            ],
-
-            blockExplorerUrls:[
-              'https://testnet.arcscan.app'
-            ]
-          }
-        ]
-      });
-
-    }catch(addError){
-
-      console.log(addError);
-
-      alert('Failed to add ARC network');
-    }
-  }
+    params:[
+      {
+        chainId: ARC_CHAIN_ID
+      }
+    ]
+  });
 }
 
 async function connectWallet(){
 
   try{
+
+    if(!window.ethereum){
+
+      alert('Install MetaMask');
+
+      return;
+    }
 
     await switchToArcNetwork();
 
