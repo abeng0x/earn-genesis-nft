@@ -144,6 +144,33 @@
       transition: 0.4s;
     }
 
+    #nftGrid {
+
+      display: grid;
+
+      grid-template-columns: 1fr 1fr;
+
+      gap: 12px;
+
+      margin-top: 16px;
+    }
+
+    .nft-card {
+
+      background: #222;
+
+      padding: 10px;
+
+      border-radius: 16px;
+    }
+
+    .nft-card img {
+
+      width: 100%;
+
+      border-radius: 12px;
+    }
+
     a {
 
       text-decoration: none;
@@ -290,6 +317,16 @@
 
     </div>
 
+    <div id="gallery">
+
+      <h3>
+        Your Collection
+      </h3>
+
+      <div id="nftGrid"></div>
+
+    </div>
+
   </div>
 
   <script>
@@ -401,6 +438,34 @@
       } catch(err) {
 
         console.log(err);
+      }
+    }
+
+    async function loadGallery() {
+
+      const grid =
+        document.getElementById(
+          'nftGrid'
+        );
+
+      grid.innerHTML = '';
+
+      for (let i = 0; i < 3; i++) {
+
+        grid.innerHTML += `
+
+          <div class="nft-card">
+
+            <img
+              src="https://i.imgur.com/Eu4epbQ.jpeg"
+            />
+
+            <p>
+              EARN Genesis #${i}
+            </p>
+
+          </div>
+        `;
       }
     }
 
@@ -535,6 +600,8 @@ ${address.slice(0,6)}...${address.slice(-4)}`;
 
         await loadOwnedNFTs();
 
+        await loadGallery();
+
         await checkNetwork();
 
         document
@@ -591,6 +658,8 @@ ${address.slice(0,6)}...${address.slice(-4)}`;
       await loadSupply();
 
       await loadOwnedNFTs();
+
+      await loadGallery();
 
       await checkNetwork();
 
@@ -663,6 +732,8 @@ ${address.slice(0,6)}...${address.slice(-4)}`;
         await loadSupply();
 
         await loadOwnedNFTs();
+
+        await loadGallery();
 
         await checkNetwork();
 
