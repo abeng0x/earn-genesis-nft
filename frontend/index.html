@@ -222,7 +222,7 @@ a {
 
   <div class="stats">
 
-    <p id="price">
+    <p>
       Mint Price: FREE
     </p>
 
@@ -253,9 +253,7 @@ a {
     id="connect"
     class="primary"
   >
-
     Connect Wallet
-
   </button>
 
   <p id="address">
@@ -270,9 +268,7 @@ a {
     id="mint"
     class="primary"
   >
-
     Mint NFT
-
   </button>
 
   <a
@@ -282,17 +278,6 @@ a {
 
     <button class="secondary">
       View Contract
-    </button>
-
-  </a>
-
-  <a
-    href="https://testnet.arcscan.app"
-    target="_blank"
-  >
-
-    <button class="secondary">
-      ARC Explorer
     </button>
 
   </a>
@@ -318,12 +303,71 @@ const METADATA_URI =
 
 const MAX_SUPPLY = 100;
 
-const ARC_CHAIN_ID_DECIMAL = 5042002;
-
-const ARC_CHAIN_ID_HEX =
-  '0x' + ARC_CHAIN_ID_DECIMAL.toString(16);
+const ARC_CHAIN_ID = '0x4cef52';
 
 let signer;
+
+async function switchToArcNetwork() {
+
+  try {
+
+    await window.ethereum.request({
+
+      method: 'wallet_switchEthereumChain',
+
+      params: [
+
+        {
+          chainId: ARC_CHAIN_ID
+        }
+      ]
+    });
+
+  } catch (switchError) {
+
+    try {
+
+      await window.ethereum.request({
+
+        method: 'wallet_addEthereumChain',
+
+        params: [
+
+          {
+            chainId: ARC_CHAIN_ID,
+
+            chainName: 'Arc Testnet',
+
+            nativeCurrency: {
+
+              name: 'USDC',
+
+              symbol: 'USDC',
+
+              decimals: 18
+            },
+
+            rpcUrls: [
+
+              'https://rpc.testnet.arc.network'
+            ],
+
+            blockExplorerUrls: [
+
+              'https://testnet.arcscan.app'
+            ]
+          }
+        ]
+      });
+
+    } catch(addError) {
+
+      console.log(addError);
+
+      alert(addError.message);
+    }
+  }
+}
 
 async function loadSupply() {
 
@@ -418,71 +462,7 @@ async function loadOwnedNFTs() {
   }
 }
 
-async function switchToArcNetwork() {
-
-  if (!window.ethereum) return;
-
-  try {
-
-    await window.ethereum.request({
-
-      method: 'wallet_switchEthereumChain',
-
-      params: [
-
-        {
-          chainId: ARC_CHAIN_ID_HEX
-        }
-      ]
-    });
-
-  } catch (switchError) {
-
-    try {
-
-      await window.ethereum.request({
-
-        method: 'wallet_addEthereumChain',
-
-        params: [
-
-          {
-            chainId: ARC_CHAIN_ID_HEX,
-
-            chainName: 'Arc Testnet',
-
-            nativeCurrency: {
-
-              name: 'USDC',
-
-              symbol: 'USDC',
-
-              decimals: 18
-            },
-
-            rpcUrls: [
-
-              'https://rpc.testnet.arc.network'
-            ],
-
-            blockExplorerUrls: [
-
-              'https://testnet.arcscan.app'
-            ]
-          }
-        ]
-      });
-
-    } catch(addError) {
-
-      console.log(addError);
-    }
-  }
-}
-
 async function checkNetwork() {
-
-  if (!window.ethereum) return;
 
   const chainId =
     await window.ethereum.request({
@@ -496,7 +476,7 @@ async function checkNetwork() {
 
     ===
 
-    ARC_CHAIN_ID_HEX.toLowerCase()
+    ARC_CHAIN_ID.toLowerCase()
 
   ) {
 
@@ -538,8 +518,6 @@ async function connectWallet() {
     method: 'eth_requestAccounts'
   });
 
-  await switchToArcNetwork();
-
   const provider =
     new ethers.BrowserProvider(
       window.ethereum
@@ -579,29 +557,6 @@ async function mintNFT() {
   }
 
   await switchToArcNetwork();
-
-  const currentChain =
-    await window.ethereum.request({
-
-      method: 'eth_chainId'
-    });
-
-  if (
-
-    currentChain.toLowerCase()
-
-    !==
-
-    ARC_CHAIN_ID_HEX.toLowerCase()
-
-  ) {
-
-    alert(
-      'Please switch to ARC Testnet'
-    );
-
-    return;
-  }
 
   const mintButton =
     document.getElementById(
