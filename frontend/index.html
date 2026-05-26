@@ -3,12 +3,12 @@
 
 <head>
 
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 
 <meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0"
-/>
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+>
 
 <title>E A R N Genesis</title>
 
@@ -17,83 +17,60 @@
 <style>
 
 body{
-  margin:0;
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background:#050505;
-  color:white;
-  font-family:Arial;
-  padding:20px;
+margin:0;
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:#050505;
+font-family:Arial;
+color:white;
+padding:20px;
 }
 
 .card{
-  width:420px;
-  background:#111827;
-  border-radius:24px;
-  padding:24px;
-  box-shadow:0 0 40px rgba(0,255,170,0.08);
+width:420px;
+background:#111827;
+padding:24px;
+border-radius:24px;
 }
 
 .hero{
-  width:100%;
-  border-radius:18px;
-  margin-bottom:20px;
+width:100%;
+border-radius:18px;
+margin-bottom:20px;
 }
 
 button{
-  width:100%;
-  padding:15px;
-  border:none;
-  border-radius:14px;
-  margin-top:12px;
-  font-size:16px;
-  font-weight:bold;
-  cursor:pointer;
+width:100%;
+padding:15px;
+margin-top:12px;
+border:none;
+border-radius:14px;
+font-size:16px;
+font-weight:bold;
+cursor:pointer;
 }
 
 .primary{
-  background:linear-gradient(
-    135deg,
-    #00ffa3,
-    #00c2ff
-  );
-  color:black;
+background:#00ffa3;
+color:black;
 }
 
 .secondary{
-  background:#1f2937;
-  color:white;
+background:#1f2937;
+color:white;
 }
 
 #address{
-  margin-top:14px;
-  color:#00ffa3;
-  font-size:14px;
+margin-top:12px;
+color:#00ffa3;
+font-size:14px;
+word-break:break-all;
 }
 
 #status{
-  margin-top:10px;
-}
-
-.progress{
-  width:100%;
-  height:12px;
-  background:#1f2937;
-  border-radius:999px;
-  overflow:hidden;
-  margin-top:10px;
-}
-
-.progress-bar{
-  width:0%;
-  height:100%;
-  background:linear-gradient(
-    90deg,
-    #00ffa3,
-    #00c2ff
-  );
+margin-top:12px;
 }
 
 </style>
@@ -105,8 +82,8 @@ button{
 <div class="card">
 
 <img
-  class="hero"
-  src="https://i.imgur.com/Eu4epbQ.jpeg"
+class="hero"
+src="https://i.imgur.com/Eu4epbQ.jpeg"
 />
 
 <h1>E A R N Genesis</h1>
@@ -125,22 +102,13 @@ Mint Price: 0.001 USDC
 Supply: Loading...
 </p>
 
-<div class="progress">
-
-<div
-  id="progressBar"
-  class="progress-bar"
-></div>
-
-</div>
-
 <p id="owned">
 Your NFTs: 0
 </p>
 
 <button
-  id="connect"
-  class="primary"
+id="connect"
+class="primary"
 >
 Connect Wallet
 </button>
@@ -154,15 +122,15 @@ Status: Idle
 </p>
 
 <button
-  id="mint"
-  class="primary"
+id="mint"
+class="primary"
 >
 Mint NFT
 </button>
 
 <a
-  href="https://testnet.arcscan.app/address/0xA75ABf9725426F34b560E80B73Fa5403da3C967A"
-  target="_blank"
+href="https://testnet.arcscan.app/address/0xA75ABf9725426F34b560E80B73Fa5403da3C967A"
+target="_blank"
 >
 
 <button class="secondary">
@@ -180,7 +148,7 @@ const CONTRACT_ADDRESS =
 
 const ABI = [
 
-"function mint(string memory uri) public payable",
+"function mint(address to,string memory uri) public payable",
 
 "function nextTokenId() view returns(uint256)",
 
@@ -190,8 +158,6 @@ const ABI = [
 const METADATA_URI =
 'https://gateway.pinata.cloud/ipfs/bafkreihgpyagb57cucqtgg6zfoakb4tfgbk7q7hnxggv4zafzk26gbe73e';
 
-const MAX_SUPPLY = 100;
-
 const ARC_CHAIN_ID =
 '0x4cef52';
 
@@ -199,254 +165,248 @@ let signer;
 
 async function connectWallet(){
 
-  try{
+try{
 
-    if(!window.ethereum){
+if(!window.ethereum){
 
-      alert('Install MetaMask');
+alert('Install MetaMask');
 
-      return;
-    }
+return;
+}
 
-    await window.ethereum.request({
+await window.ethereum.request({
 
-      method:'wallet_addEthereumChain',
+method:'wallet_addEthereumChain',
 
-      params:[{
+params:[{
 
-        chainId:'0x4cef52',
+chainId:'0x4cef52',
 
-        chainName:'Arc Testnet',
+chainName:'Arc Testnet',
 
-        nativeCurrency:{
+nativeCurrency:{
 
-          name:'USDC',
+name:'USDC',
 
-          symbol:'USDC',
+symbol:'USDC',
 
-          decimals:18
-        },
+decimals:18
+},
 
-        rpcUrls:[
-          'https://rpc.testnet.arc.network'
-        ],
+rpcUrls:[
+'https://rpc.testnet.arc.network'
+],
 
-        blockExplorerUrls:[
-          'https://testnet.arcscan.app'
-        ]
-      }]
-    });
+blockExplorerUrls:[
+'https://testnet.arcscan.app'
+]
 
-    await window.ethereum.request({
+}]
+});
 
-      method:'wallet_switchEthereumChain',
+await window.ethereum.request({
 
-      params:[{
-        chainId:'0x4cef52'
-      }]
-    });
+method:'wallet_switchEthereumChain',
 
-    await window.ethereum.request({
+params:[{
+chainId:'0x4cef52'
+}]
+});
 
-      method:'eth_requestAccounts'
-    });
+await window.ethereum.request({
 
-    const provider =
-      new ethers.BrowserProvider(
-        window.ethereum
-      );
+method:'eth_requestAccounts'
+});
 
-    signer =
-      await provider.getSigner();
+const provider =
+new ethers.BrowserProvider(
+window.ethereum
+);
 
-    const address =
-      await signer.getAddress();
+signer =
+await provider.getSigner();
 
-    document
-      .getElementById(
-        'address'
-      )
-      .innerText =
+const address =
+await signer.getAddress();
 
-      `Connected:
-${address.slice(0,6)}...${address.slice(-4)}`;
+document
+.getElementById(
+'address'
+)
+.innerText =
 
-    document
-      .getElementById(
-        'status'
-      )
-      .innerText =
+address;
 
-      '✅ Connected to ARC Testnet';
+document
+.getElementById(
+'status'
+)
+.innerText =
 
-    await loadData();
+'✅ Connected';
 
-  }catch(err){
+await loadData();
 
-    console.log(err);
+}catch(err){
 
-    alert(err.message);
-  }
+console.log(err);
+
+alert(err.message);
+}
 }
 
 async function loadData(){
 
-  try{
+try{
 
-    const provider =
-      new ethers.BrowserProvider(
-        window.ethereum
-      );
+const provider =
+new ethers.BrowserProvider(
+window.ethereum
+);
 
-    const contract =
-      new ethers.Contract(
+const contract =
+new ethers.Contract(
 
-        CONTRACT_ADDRESS,
+CONTRACT_ADDRESS,
 
-        ABI,
+ABI,
 
-        provider
-      );
+provider
+);
 
-    const supply =
-      await contract.nextTokenId();
+const supply =
+await contract.nextTokenId();
 
-    document
-      .getElementById(
-        'supply'
-      )
-      .innerText =
+document
+.getElementById(
+'supply'
+)
+.innerText =
 
-      `Supply: ${supply}/${MAX_SUPPLY}`;
+`Supply: ${supply}/100`;
 
-    const percent =
-      (Number(supply) / MAX_SUPPLY) * 100;
+if(signer){
 
-    document
-      .getElementById(
-        'progressBar'
-      )
-      .style.width =
+const address =
+await signer.getAddress();
 
-      `${percent}%`;
+const owned =
+await contract.balanceOf(
+address
+);
 
-    if(signer){
+document
+.getElementById(
+'owned'
+)
+.innerText =
 
-      const address =
-        await signer.getAddress();
+`Your NFTs: ${owned}`;
+}
 
-      const owned =
-        await contract.balanceOf(
-          address
-        );
+}catch(err){
 
-      document
-        .getElementById(
-          'owned'
-        )
-        .innerText =
-
-        `Your NFTs: ${owned}`;
-    }
-
-  }catch(err){
-
-    console.log(err);
-  }
+console.log(err);
+}
 }
 
 async function mintNFT(){
 
-  try{
+try{
 
-    if(!signer){
+if(!signer){
 
-      alert(
-        'Connect wallet first'
-      );
+alert(
+'Connect wallet first'
+);
 
-      return;
-    }
-
-    document
-      .getElementById(
-        'status'
-      )
-      .innerText =
-
-      'Minting...';
-
-    const contract =
-      new ethers.Contract(
-
-        CONTRACT_ADDRESS,
-
-        ABI,
-
-        signer
-      );
-
-    const tx =
-      await contract.mint(
-
-        METADATA_URI,
-
-        {
-          value:
-            ethers.parseEther(
-              "0.001"
-            )
-        }
-      );
-
-    await tx.wait();
-
-    document
-      .getElementById(
-        'status'
-      )
-      .innerText =
-
-      '✅ Mint Success';
-
-    await loadData();
-
-    window.open(
-
-      `https://testnet.arcscan.app/tx/${tx.hash}`,
-
-      '_blank'
-    );
-
-  }catch(err){
-
-    console.log(err);
-
-    alert(err.message);
-
-    document
-      .getElementById(
-        'status'
-      )
-      .innerText =
-
-      '❌ Mint Failed';
-  }
+return;
 }
 
 document
-  .getElementById(
-    'connect'
-  )
-  .onclick =
-    connectWallet;
+.getElementById(
+'status'
+)
+.innerText =
+
+'Minting...';
+
+const contract =
+new ethers.Contract(
+
+CONTRACT_ADDRESS,
+
+ABI,
+
+signer
+);
+
+const address =
+await signer.getAddress();
+
+const tx =
+await contract.mint(
+
+address,
+
+METADATA_URI,
+
+{
+value:
+ethers.parseEther(
+"0.001"
+)
+}
+);
+
+await tx.wait();
 
 document
-  .getElementById(
-    'mint'
-  )
-  .onclick =
-    mintNFT;
+.getElementById(
+'status'
+)
+.innerText =
+
+'✅ Mint Success';
+
+await loadData();
+
+window.open(
+
+`https://testnet.arcscan.app/tx/${tx.hash}`,
+
+'_blank'
+);
+
+}catch(err){
+
+console.log(err);
+
+alert(err.message);
+
+document
+.getElementById(
+'status'
+)
+.innerText =
+
+'❌ Mint Failed';
+}
+}
+
+document
+.getElementById(
+'connect'
+)
+.onclick =
+connectWallet;
+
+document
+.getElementById(
+'mint'
+)
+.onclick =
+mintNFT;
 
 loadData();
 
