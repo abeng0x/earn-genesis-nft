@@ -223,7 +223,7 @@ a {
   <div class="stats">
 
     <p id="price">
-      Price: FREE
+      Mint Price: 50 USDC
     </p>
 
     <p id="supply">
@@ -321,7 +321,6 @@ const MAX_SUPPLY = 100;
 const ARC_CHAIN_ID_DECIMAL = 5042002;
 
 const ARC_CHAIN_ID_HEX =
-
   '0x' + ARC_CHAIN_ID_DECIMAL.toString(16);
 
 let signer;
@@ -491,7 +490,15 @@ async function checkNetwork() {
       method: 'eth_chainId'
     });
 
-  if (chainId.toLowerCase() === ARC_CHAIN_ID_HEX.toLowerCase()) {
+  if (
+
+    chainId.toLowerCase()
+
+    ===
+
+    ARC_CHAIN_ID_HEX.toLowerCase()
+
+  ) {
 
     document
       .getElementById(
