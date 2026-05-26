@@ -1,528 +1,74 @@
-<!DOCTYPE html>
-<html lang="en">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
 
-<head>
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-<meta charset="UTF-8" />
+contract EarnGenesisNFT is ERC721URIStorage, Ownable {
 
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0"
-/>
+    uint256 public nextTokenId;
 
-<title>E A R N Genesis</title>
+    uint256 public constant MAX_SUPPLY = 100;
 
-<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.1/dist/ethers.umd.min.js"></script>
+    uint256 public constant MINT_PRICE =
+        0.001 ether;
 
-<style>
+    uint256 public constant MAX_PER_WALLET = 3;
 
-body{
-  margin:0;
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background:
-    radial-gradient(
-      circle at top,
-      #111827,
-      #030303 70%
-    );
-  color:white;
-  font-family:Arial;
-  padding:30px;
+    mapping(address => uint256)
+        public minted;
+
+    constructor()
+        ERC721("E A R N Genesis", "EARN")
+        Ownable(msg.sender)
+    {}
+
+    function mint(
+        string memory uri
+    )
+        public
+        payable
+    {
+        require(
+            nextTokenId < MAX_SUPPLY,
+            "Sold out"
+        );
+
+        require(
+            msg.value >= MINT_PRICE,
+            "Not enough ETH"
+        );
+
+        require(
+            minted[msg.sender]
+                < MAX_PER_WALLET,
+            "Wallet limit reached"
+        );
+
+        uint256 tokenId =
+            nextTokenId;
+
+        _safeMint(
+            msg.sender,
+            tokenId
+        );
+
+        _setTokenURI(
+            tokenId,
+            uri
+        );
+
+        minted[msg.sender]++;
+
+        nextTokenId++;
+    }
+
+    function withdraw()
+        public
+        onlyOwner
+    {
+        payable(owner()).transfer(
+            address(this).balance
+        );
+    }
 }
-
-.card{
-  width:430px;
-  background:
-    rgba(255,255,255,0.05);
-  border:
-    1px solid rgba(255,255,255,0.08);
-  border-radius:28px;
-  padding:28px;
-  backdrop-filter:blur(14px);
-}
-
-.hero{
-  width:100%;
-  border-radius:22px;
-  margin-bottom:20px;
-}
-
-button{
-  width:100%;
-  padding:16px;
-  margin-top:14px;
-  border:none;
-  border-radius:16px;
-  font-size:16px;
-  cursor:pointer;
-  font-weight:bold;
-}
-
-.primary{
-  background:
-    linear-gradient(
-      135deg,
-      #00ffa3,
-      #00c2ff
-    );
-  color:black;
-}
-
-.secondary{
-  background:#1f2937;
-  color:white;
-}
-
-.stats{
-  background:
-    rgba(255,255,255,0.04);
-  border-radius:18px;
-  padding:18px;
-  margin-top:18px;
-}
-
-.progress-container{
-  width:100%;
-  height:14px;
-  background:#1f2937;
-  border-radius:999px;
-  overflow:hidden;
-  margin-top:10px;
-}
-
-.progress-bar{
-  width:0%;
-  height:100%;
-  background:
-    linear-gradient(
-      90deg,
-      #00ffa3,
-      #00c2ff
-    );
-}
-
-#address{
-  color:#00ffa3;
-  margin-top:12px;
-  font-size:14px;
-  word-break:break-all;
-}
-
-#networkStatus{
-  margin-top:12px;
-  font-weight:bold;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<div class="card">
-
-<img
-class="hero"
-src="https://i.imgur.com/Eu4epbQ.jpeg"
-/>
-
-<h1>E A R N Genesis</h1>
-
-<p>
-ARC Testnet NFT Collection
-</p>
-
-<div class="stats">
-
-<p>
-Mint Price: 0.001 USDC
-</p>
-
-<p id="supply">
-Supply: Loading...
-</p>
-
-<div class="progress-container">
-
-<div
-id="progressBar"
-class="progress-bar"
-></div>
-
-</div>
-
-<p id="owned">
-Your NFTs: 0
-</p>
-
-</div>
-
-<button
-id="connect"
-class="primary"
->
-Connect Wallet
-</button>
-
-<p id="address">
-Not Connected
-</p>
-
-<p id="networkStatus">
-Network: Not Connected
-</p>
-
-<button
-id="mint"
-class="primary"
->
-Mint NFT
-</button>
-
-<a
-href="https://testnet.arcscan.app/address/0xA75ABf9725426F34b560E80B73Fa5403da3C967A"
-target="_blank"
->
-
-<button class="secondary">
-View Contract
-</button>
-
-</a>
-
-</div>
-
-<script>
-
-const CONTRACT_ADDRESS =
-'0xA75ABf9725426F34b560E80B73Fa5403da3C967A';
-
-const ABI = [
-
-"function mint(string memory uri) public payable",
-
-"function nextTokenId() view returns (uint256)",
-
-"function balanceOf(address owner) view returns (uint256)"
-];
-
-const METADATA_URI =
-'https://gateway.pinata.cloud/ipfs/bafkreihgpyagb57cucqtgg6zfoakb4tfgbk7q7hnxggv4zafzk26gbe73e';
-
-const MAX_SUPPLY = 100;
-
-const ARC_CHAIN_ID_HEX =
-'0x4cef52';
-
-let signer;
-
-async function switchToArcNetwork(){
-
-if(!window.ethereum) return;
-
-try{
-
-await window.ethereum.request({
-
-method:'wallet_switchEthereumChain',
-
-params:[
-
-{
-chainId:ARC_CHAIN_ID_HEX
-}
-
-]
-});
-
-}catch(err){
-
-try{
-
-await window.ethereum.request({
-
-method:'wallet_addEthereumChain',
-
-params:[
-
-{
-
-chainId:ARC_CHAIN_ID_HEX,
-
-chainName:'Arc Testnet',
-
-nativeCurrency:{
-
-name:'USDC',
-
-symbol:'USDC',
-
-decimals:18
-
-},
-
-rpcUrls:[
-
-'https://rpc.testnet.arc.network'
-
-],
-
-blockExplorerUrls:[
-
-'https://testnet.arcscan.app'
-
-]
-
-}
-
-]
-
-});
-
-}catch(addErr){
-
-console.log(addErr);
-
-alert(
-'Failed to add ARC network'
-);
-}
-}
-}
-
-async function loadSupply(){
-
-try{
-
-const provider =
-new ethers.BrowserProvider(
-window.ethereum
-);
-
-const contract =
-new ethers.Contract(
-
-CONTRACT_ADDRESS,
-
-ABI,
-
-provider
-);
-
-const total =
-await contract.nextTokenId();
-
-document
-.getElementById(
-'supply'
-)
-.innerText =
-
-`Supply: ${total}/${MAX_SUPPLY}`;
-
-const percentage =
-(Number(total)/MAX_SUPPLY)*100;
-
-document
-.getElementById(
-'progressBar'
-)
-.style.width =
-
-`${percentage}%`;
-
-}catch(err){
-
-console.log(err);
-}
-}
-
-async function loadOwned(){
-
-if(!signer) return;
-
-try{
-
-const provider =
-new ethers.BrowserProvider(
-window.ethereum
-);
-
-const contract =
-new ethers.Contract(
-
-CONTRACT_ADDRESS,
-
-ABI,
-
-provider
-);
-
-const address =
-await signer.getAddress();
-
-const balance =
-await contract.balanceOf(
-address
-);
-
-document
-.getElementById(
-'owned'
-)
-.innerText =
-
-`Your NFTs: ${balance}`;
-
-}catch(err){
-
-console.log(err);
-}
-}
-
-async function connectWallet(){
-
-try{
-
-if(!window.ethereum){
-
-alert(
-'Install MetaMask'
-);
-
-return;
-}
-
-await switchToArcNetwork();
-
-await window.ethereum.request({
-
-method:'eth_requestAccounts'
-
-});
-
-const provider =
-new ethers.BrowserProvider(
-window.ethereum
-);
-
-signer =
-await provider.getSigner();
-
-const address =
-await signer.getAddress();
-
-document
-.getElementById(
-'address'
-)
-.innerText =
-
-address;
-
-document
-.getElementById(
-'networkStatus'
-)
-.innerText =
-
-'✅ Connected to ARC Testnet';
-
-await loadSupply();
-
-await loadOwned();
-
-}catch(err){
-
-console.log(err);
-
-alert(err.message);
-}
-}
-
-async function mintNFT(){
-
-try{
-
-if(!signer){
-
-alert(
-'Connect wallet first'
-);
-
-return;
-}
-
-await switchToArcNetwork();
-
-const contract =
-new ethers.Contract(
-
-CONTRACT_ADDRESS,
-
-ABI,
-
-signer
-);
-
-const tx =
-await contract.mint(
-
-METADATA_URI,
-
-{
-value:
-ethers.parseEther(
-"0.001"
-)
-}
-);
-
-await tx.wait();
-
-alert(
-'Mint Success'
-);
-
-window.open(
-
-`https://testnet.arcscan.app/tx/${tx.hash}`,
-
-'_blank'
-);
-
-await loadSupply();
-
-await loadOwned();
-
-}catch(err){
-
-console.log(err);
-
-alert(err.message);
-}
-}
-
-document
-.getElementById(
-'connect'
-)
-.onclick =
-connectWallet;
-
-document
-.getElementById(
-'mint'
-)
-.onclick =
-mintNFT;
-
-loadSupply();
-
-</script>
-
-</body>
-</html>

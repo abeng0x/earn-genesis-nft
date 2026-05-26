@@ -3,12 +3,12 @@
 
 <head>
 
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 
 <meta
 name="viewport"
 content="width=device-width, initial-scale=1.0"
->
+/>
 
 <title>E A R N Genesis</title>
 
@@ -22,38 +22,54 @@ min-height:100vh;
 display:flex;
 justify-content:center;
 align-items:center;
-background:#050505;
-font-family:Arial;
+background:
+radial-gradient(
+circle at top,
+#111827,
+#030303 70%
+);
 color:white;
-padding:20px;
+font-family:Arial;
+padding:30px;
 }
 
 .card{
-width:420px;
-background:#111827;
-padding:24px;
-border-radius:24px;
+width:430px;
+background:
+rgba(255,255,255,0.05);
+border:
+1px solid rgba(255,255,255,0.08);
+border-radius:28px;
+padding:28px;
+backdrop-filter:blur(14px);
+box-shadow:
+0 0 50px rgba(0,255,170,0.08);
 }
 
 .hero{
 width:100%;
-border-radius:18px;
+border-radius:22px;
 margin-bottom:20px;
 }
 
 button{
 width:100%;
-padding:15px;
-margin-top:12px;
+padding:16px;
+margin-top:14px;
 border:none;
-border-radius:14px;
+border-radius:16px;
 font-size:16px;
-font-weight:bold;
 cursor:pointer;
+font-weight:bold;
 }
 
 .primary{
-background:#00ffa3;
+background:
+linear-gradient(
+135deg,
+#00ffa3,
+#00c2ff
+);
 color:black;
 }
 
@@ -62,15 +78,45 @@ background:#1f2937;
 color:white;
 }
 
+.stats{
+background:
+rgba(255,255,255,0.04);
+border-radius:18px;
+padding:18px;
+margin-top:18px;
+}
+
+.progress-container{
+width:100%;
+height:14px;
+background:#1f2937;
+border-radius:999px;
+overflow:hidden;
+margin-top:10px;
+}
+
+.progress-bar{
+width:0%;
+height:100%;
+background:
+linear-gradient(
+90deg,
+#00ffa3,
+#00c2ff
+);
+transition:0.4s;
+}
+
 #address{
-margin-top:12px;
 color:#00ffa3;
+margin-top:12px;
 font-size:14px;
 word-break:break-all;
 }
 
-#status{
+#networkStatus{
 margin-top:12px;
+font-weight:bold;
 }
 
 </style>
@@ -92,19 +138,34 @@ src="https://i.imgur.com/Eu4epbQ.jpeg"
 ARC Testnet NFT Collection
 </p>
 
-<br>
+<div class="stats">
 
 <p>
-Mint Price: 0.001 USDC
+Mint Price: 0.001 ETH
 </p>
 
 <p id="supply">
 Supply: Loading...
 </p>
 
+<div class="progress-container">
+
+<div
+id="progressBar"
+class="progress-bar"
+></div>
+
+</div>
+
+<p>
+Max Per Wallet: 3
+</p>
+
 <p id="owned">
 Your NFTs: 0
 </p>
+
+</div>
 
 <button
 id="connect"
@@ -117,8 +178,8 @@ Connect Wallet
 Not Connected
 </p>
 
-<p id="status">
-Status: Idle
+<p id="networkStatus">
+Network: Not Connected
 </p>
 
 <button
@@ -148,37 +209,34 @@ const CONTRACT_ADDRESS =
 
 const ABI = [
 
-"function mint(address to,string memory uri) public payable",
+"function mint(string memory uri) public payable",
 
 "function nextTokenId() view returns(uint256)",
 
 "function balanceOf(address owner) view returns(uint256)"
+
 ];
 
 const METADATA_URI =
 'https://gateway.pinata.cloud/ipfs/bafkreihgpyagb57cucqtgg6zfoakb4tfgbk7q7hnxggv4zafzk26gbe73e';
 
-const ARC_CHAIN_ID =
+const MAX_SUPPLY = 100;
+
+const ARC_CHAIN_ID_HEX =
 '0x4cef52';
 
+let provider;
 let signer;
 
-async function connectWallet(){
-
-try{
-
-if(!window.ethereum){
-
-alert('Install MetaMask');
-
-return;
-}
+async function addArcNetwork(){
 
 await window.ethereum.request({
 
 method:'wallet_addEthereumChain',
 
-params:[{
+params:[
+
+{
 
 chainId:'0x4cef52',
 
@@ -191,34 +249,75 @@ name:'USDC',
 symbol:'USDC',
 
 decimals:18
+
 },
 
 rpcUrls:[
+
 'https://rpc.testnet.arc.network'
+
 ],
 
 blockExplorerUrls:[
+
 'https://testnet.arcscan.app'
+
 ]
 
-}]
+}
+
+]
+
 });
+}
+
+async function switchToArc(){
+
+try{
 
 await window.ethereum.request({
 
 method:'wallet_switchEthereumChain',
 
-params:[{
-chainId:'0x4cef52'
-}]
+params:[
+
+{
+chainId:ARC_CHAIN_ID_HEX
+}
+
+]
+
 });
+
+}catch(err){
+
+await addArcNetwork();
+}
+}
+
+async function connectWallet(){
+
+try{
+
+if(!window.ethereum){
+
+alert(
+'Install MetaMask'
+);
+
+return;
+}
+
+await addArcNetwork();
+
+await switchToArc();
 
 await window.ethereum.request({
 
 method:'eth_requestAccounts'
 });
 
-const provider =
+provider =
 new ethers.BrowserProvider(
 window.ethereum
 );
@@ -239,13 +338,15 @@ address;
 
 document
 .getElementById(
-'status'
+'networkStatus'
 )
 .innerText =
 
-'✅ Connected';
+'✅ Connected to ARC Testnet';
 
-await loadData();
+await loadSupply();
+
+await loadOwned();
 
 }catch(err){
 
@@ -255,11 +356,11 @@ alert(err.message);
 }
 }
 
-async function loadData(){
+async function loadSupply(){
 
 try{
 
-const provider =
+provider =
 new ethers.BrowserProvider(
 window.ethereum
 );
@@ -274,7 +375,7 @@ ABI,
 provider
 );
 
-const supply =
+const total =
 await contract.nextTokenId();
 
 document
@@ -283,14 +384,45 @@ document
 )
 .innerText =
 
-`Supply: ${supply}/100`;
+`Supply: ${total}/${MAX_SUPPLY}`;
 
-if(signer){
+const percentage =
+(Number(total)/MAX_SUPPLY)*100;
+
+document
+.getElementById(
+'progressBar'
+)
+.style.width =
+
+`${percentage}%`;
+
+}catch(err){
+
+console.log(err);
+}
+}
+
+async function loadOwned(){
+
+try{
+
+if(!signer) return;
+
+const contract =
+new ethers.Contract(
+
+CONTRACT_ADDRESS,
+
+ABI,
+
+provider
+);
 
 const address =
 await signer.getAddress();
 
-const owned =
+const balance =
 await contract.balanceOf(
 address
 );
@@ -301,8 +433,7 @@ document
 )
 .innerText =
 
-`Your NFTs: ${owned}`;
-}
+`Your NFTs: ${balance}`;
 
 }catch(err){
 
@@ -323,13 +454,7 @@ alert(
 return;
 }
 
-document
-.getElementById(
-'status'
-)
-.innerText =
-
-'Minting...';
+await switchToArc();
 
 const contract =
 new ethers.Contract(
@@ -341,13 +466,18 @@ ABI,
 signer
 );
 
-const address =
-await signer.getAddress();
+const mintButton =
+document.getElementById(
+'mint'
+);
+
+mintButton.disabled = true;
+
+mintButton.innerText =
+'Minting...';
 
 const tx =
 await contract.mint(
-
-address,
 
 METADATA_URI,
 
@@ -357,19 +487,13 @@ ethers.parseEther(
 "0.001"
 )
 }
+
 );
 
 await tx.wait();
 
-document
-.getElementById(
-'status'
-)
-.innerText =
-
-'✅ Mint Success';
-
-await loadData();
+mintButton.innerText =
+'Mint Success';
 
 window.open(
 
@@ -378,20 +502,31 @@ window.open(
 '_blank'
 );
 
+await loadSupply();
+
+await loadOwned();
+
 }catch(err){
 
 console.log(err);
 
-alert(err.message);
+alert(
+err.message
+);
+}
 
 document
 .getElementById(
-'status'
+'mint'
+)
+.disabled = false;
+
+document
+.getElementById(
+'mint'
 )
 .innerText =
-
-'❌ Mint Failed';
-}
+'Mint NFT';
 }
 
 document
@@ -408,9 +543,10 @@ document
 .onclick =
 mintNFT;
 
-loadData();
+loadSupply();
 
 </script>
 
 </body>
+
 </html>
