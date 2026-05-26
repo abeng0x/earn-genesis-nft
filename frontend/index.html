@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8" />
@@ -30,8 +31,8 @@ body {
   background:
     radial-gradient(
       circle at top,
-      #1f2937,
-      #050505 60%
+      #111827,
+      #030303 70%
     );
 
   color: white;
@@ -43,45 +44,45 @@ body {
 
 .card {
 
-  width: 420px;
+  width: 430px;
 
   background:
     rgba(255,255,255,0.05);
-
-  backdrop-filter: blur(14px);
 
   border:
     1px solid rgba(255,255,255,0.08);
 
   border-radius: 28px;
 
-  padding: 30px;
+  padding: 28px;
+
+  backdrop-filter: blur(14px);
 
   box-shadow:
-    0 0 40px rgba(0,255,170,0.08);
+    0 0 50px rgba(0,255,170,0.08);
 }
 
 .hero {
 
   width: 100%;
 
-  border-radius: 24px;
+  border-radius: 22px;
 
   margin-bottom: 20px;
 }
 
 h1 {
 
-  font-size: 42px;
+  font-size: 40px;
 
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .subtitle {
 
   color: #9ca3af;
 
-  margin-bottom: 24px;
+  margin-bottom: 22px;
 }
 
 button {
@@ -102,7 +103,7 @@ button {
 
   font-weight: bold;
 
-  transition: 0.25s;
+  transition: 0.2s;
 }
 
 button:hover {
@@ -134,18 +135,18 @@ button:hover {
   background:
     rgba(255,255,255,0.04);
 
-  border-radius: 20px;
+  border-radius: 18px;
 
   padding: 18px;
 
-  margin-top: 20px;
+  margin-top: 18px;
 }
 
 .stats p {
 
-  color: white;
-
   margin: 10px 0;
+
+  color: white;
 }
 
 .progress-container {
@@ -160,7 +161,7 @@ button:hover {
 
   overflow: hidden;
 
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
 .progress-bar {
@@ -193,18 +194,6 @@ button:hover {
   margin-top: 12px;
 
   font-size: 14px;
-}
-
-#preview {
-
-  margin-top: 24px;
-}
-
-#preview img {
-
-  width: 100%;
-
-  border-radius: 18px;
 }
 
 a {
@@ -257,21 +246,6 @@ a {
     <p id="owned">
       Your NFTs: 0
     </p>
-
-  </div>
-
-  <div
-    id="preview"
-    style="display:none;"
-  >
-
-    <h3>
-      NFT Preview
-    </h3>
-
-    <img
-      src="https://i.imgur.com/Eu4epbQ.jpeg"
-    />
 
   </div>
 
@@ -344,11 +318,19 @@ const METADATA_URI =
 
 const MAX_SUPPLY = 100;
 
+const ARC_CHAIN_ID_DECIMAL = 5042002;
+
+const ARC_CHAIN_ID_HEX =
+
+  '0x' + ARC_CHAIN_ID_DECIMAL.toString(16);
+
 let signer;
 
 async function loadSupply() {
 
   try {
+
+    if (!window.ethereum) return;
 
     const provider =
       new ethers.BrowserProvider(
@@ -450,7 +432,7 @@ async function switchToArcNetwork() {
       params: [
 
         {
-          chainId: '0x4B82'
+          chainId: ARC_CHAIN_ID_HEX
         }
       ]
     });
@@ -466,22 +448,22 @@ async function switchToArcNetwork() {
         params: [
 
           {
-            chainId: '0x4B82',
+            chainId: ARC_CHAIN_ID_HEX,
 
-            chainName: 'ARC Testnet',
+            chainName: 'Arc Testnet',
 
             nativeCurrency: {
 
-              name: 'ARC',
+              name: 'USDC',
 
-              symbol: 'ARC',
+              symbol: 'USDC',
 
               decimals: 18
             },
 
             rpcUrls: [
 
-              'https://rpc-testnet.arc.io'
+              'https://rpc.testnet.arc.network'
             ],
 
             blockExplorerUrls: [
@@ -509,7 +491,7 @@ async function checkNetwork() {
       method: 'eth_chainId'
     });
 
-  if (chainId === '0x4B82') {
+  if (chainId.toLowerCase() === ARC_CHAIN_ID_HEX.toLowerCase()) {
 
     document
       .getElementById(
@@ -549,6 +531,8 @@ async function connectWallet() {
     method: 'eth_requestAccounts'
   });
 
+  await switchToArcNetwork();
+
   const provider =
     new ethers.BrowserProvider(
       window.ethereum
@@ -569,17 +553,11 @@ async function connectWallet() {
     `Connected:
 ${address.slice(0,6)}...${address.slice(-4)}`;
 
+  await checkNetwork();
+
   await loadSupply();
 
   await loadOwnedNFTs();
-
-  await checkNetwork();
-
-  document
-    .getElementById(
-      'preview'
-    )
-    .style.display = 'block';
 }
 
 async function mintNFT() {
@@ -588,6 +566,31 @@ async function mintNFT() {
 
     alert(
       'Connect wallet first'
+    );
+
+    return;
+  }
+
+  await switchToArcNetwork();
+
+  const currentChain =
+    await window.ethereum.request({
+
+      method: 'eth_chainId'
+    });
+
+  if (
+
+    currentChain.toLowerCase()
+
+    !==
+
+    ARC_CHAIN_ID_HEX.toLowerCase()
+
+  ) {
+
+    alert(
+      'Please switch to ARC Testnet'
     );
 
     return;
@@ -649,7 +652,6 @@ async function mintNFT() {
     alert(
       err.message
     );
-
   }
 
   mintButton.disabled = false;
