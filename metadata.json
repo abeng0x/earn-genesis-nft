@@ -1,15 +1,5 @@
 {
-    "name": "E A R N Genesis NFT",
-    "description": "Genesis NFT deployed on ARC testnet",
-    "image": "https://i.imgur.com/Eu4epbQ.jpeg",
-    "attributes": [
-      {
-        "trait_type": "Rarity",
-        "value": "Legendary"
-      },
-      {
-        "trait_type": "Network",
-        "value": "ARC"
-      }
-    ]
-  }
+  "name": "E A R N Genesis",
+  "description": "ARC Testnet NFT Collection",
+  "image": "https://i.imgur.com/Eu4epbQ.jpeg"
+}
